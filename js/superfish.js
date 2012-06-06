@@ -19,7 +19,7 @@
 			over = function(){
 				var $$ = $(this), menu = getMenu($$);
 				clearTimeout(menu.sfTimer);
-				$$.showSuperfishUl().siblings().hideSuperfishUl();
+				$$.showSuperfishUl( menu ).siblings().hideSuperfishUl();
 			},
 			out = function(){
 				var $$ = $(this), menu = getMenu($$), o = sf.op;
@@ -103,16 +103,43 @@
 			o.retainPath = false;
 			var $ul = $(['li.',o.hoverClass].join(''),this).add(this).not(not).removeClass(o.hoverClass)
 					.find('>ul').hide().css('visibility','hidden');
+			$ul.each(function() {
+			    var home = $(this).data('home');
+			    if (home) {
+			        home.replaceWith($(this));
+			        $(this).removeData('home');
+			    }
+			})
+
 			o.onHide.call($ul);
 			return this;
 		},
-		showSuperfishUl : function(){
+		showSuperfishUl : function(menu){
 			var o = sf.op,
 				sh = sf.c.shadowClass+'-off',
 				$ul = this.addClass(o.hoverClass)
-					.find('>ul:hidden').css('visibility','visible');
+					.find('>ul:hidden').css('visibility','visible'),
+				liPos = this.position(),
+				parentUl = this.closest('ul');
+            //console.log(menu);
+            
 			sf.IE7fix.call($ul);
 			o.onBeforeShow.call($ul);
+ 
+            /* // Snap menus to the top using css positioning
+			if (liPos.top != $(menu).position().top) {
+			    $ul.css('top', -liPos.top);
+			} */
+            
+			// Snap menus to the top using css
+			if (parentUl[0] != menu) {
+			    var shim = $('<ul class="shim"/>')
+			    $ul.replaceWith(shim);
+    			$ul.insertAfter(parentUl);
+			    $ul.data('home', shim);
+			    // Move it over
+			    $ul.css('left', parentUl.width());
+			}
 			$ul.animate(o.animation,o.speed,function(){ sf.IE7fix.call($ul); o.onShow.call($ul); });
 			return this;
 		}
